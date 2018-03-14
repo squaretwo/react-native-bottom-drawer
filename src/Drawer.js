@@ -20,6 +20,7 @@ export default class Drawer extends Component {
 
   // Define prop types
   static propTypes = {
+    titleView: PropTypes.any,
     // Pass messages to show as children
     children: PropTypes.any,
     // Whether the window is open or not
@@ -34,6 +35,7 @@ export default class Drawer extends Component {
 
   // Set default prop values
   static defaultProps = {
+    titleView: <View/>,
     isOpen: false,
     header: 'Messages',
     headerHeight: 70,
@@ -71,12 +73,12 @@ export default class Drawer extends Component {
     // Window width
     width: {
       end: width,         // takes full with once opened
-      start: width - 20,  // slightly narrower than screen when closed
+      start: width,  // slightly narrower than screen when closed
     },
     // Window backdrop opacity
     opacity: {
       start: 0,   // fully transparent when closed
-      end: 1      // not transparent once opened
+      end: 0.5      // not transparent once opened
     },
   };
 
@@ -136,7 +138,7 @@ export default class Drawer extends Component {
   }
 
   render() {
-    const { children, header } = this.props,
+    const { children, header, titleView } = this.props,
       // Interpolate position value into opacity value
       animatedOpacity = this._animatedOpacity.interpolate({
         inputRange: [this.config.position.end, this.config.position.start],
@@ -156,22 +158,15 @@ export default class Drawer extends Component {
         ],
       });
     return (
-      <Animated.View style={[styles.container, this.getContainerStyle()]}>
+      <Animated.View style={[styles.container, this.getContainerStyle()]} pointerEvents="box-none">
         {/* Use light status bar because we have dark background */}
         <StatusBar barStyle={"light-content"} />
         {/* Backdrop with animated opacity */}
-        <Animated.View style={[styles.backdrop, { opacity: animatedOpacity }]}>
+        <Animated.View style={[styles.backdrop, { opacity: animatedOpacity }]} pointerEvents="none">
           {/* Close window when tapped on header */}
           <TouchableWithoutFeedback onPress={this.close}>
             <View style={[styles.header, this.getHeaderStyle()]}>
-              {/* Icon */}
-              <View style={styles.headerIcon}>
-                <Icon name="md-arrow-up" size={24} color="white" />
-              </View>
-              {/* Header */}
-              <View style={styles.headerTitle}>
-                <Text style={styles.headerText}>{header}</Text>
-              </View>
+
             </View>
           </TouchableWithoutFeedback>
         </Animated.View>
@@ -188,8 +183,12 @@ export default class Drawer extends Component {
           // Handle gestures
           {...this._panResponder.panHandlers}
         >
+          <TouchableWithoutFeedback onPress={this.close}>
+            {titleView}
+          </TouchableWithoutFeedback>
           {/* Put all content in a scrollable container */}
           <ScrollView
+            style={{backgroundColor:'white'}}
             ref={(scrollView) => { this._scrollView = scrollView; }}
             // Enable scrolling only when the window is open
             scrollEnabled={this.state.open}
@@ -367,7 +366,7 @@ const styles = StyleSheet.create({
   },
   // Body
   content: {
-    backgroundColor: 'black',
+    backgroundColor: 'transparent',
     height: height,
   },
   // Header
